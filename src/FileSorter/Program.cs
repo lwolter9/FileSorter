@@ -56,3 +56,12 @@ public class Analyzer
         return FileType.Other;
     }
 }
+public class Scanner
+{
+    public List<string> Scan(string targetDirectory)
+    {
+        if (!Directory.Exists(targetDirectory)) throw new DirectoryNotFoundException();
+        List<string> filePaths = Directory.GetFiles(targetDirectory).ToList();
+        return filePaths;
+    }
+}
