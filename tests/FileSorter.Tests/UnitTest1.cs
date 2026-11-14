@@ -85,4 +85,22 @@ public class UnitTest1
         //Assert
         Assert.Throws<DirectoryNotFoundException>(() => s.Scan(path));
     }
+    [Theory]
+    [InlineData("C:\\Users\\Leroy\\Desktop\\Gulasch.JPEG", FileType.Image, ".jpeg", "Images")]
+    [InlineData("C:\\Users\\Leroy\\Desktop\\Gulasch.avi", FileType.Video, ".avi", "Videos")]
+    [InlineData("C:\\Users\\Leroy\\Desktop\\Gulasch.MP3", FileType.Audio, ".mp3", "Audio")]
+    [InlineData("C:\\Users\\Leroy\\Desktop\\Gulasch.mobi", FileType.Book, ".mobi", "Books")]
+    [InlineData("C:\\Users\\Leroy\\Desktop\\Gulasch.txt", FileType.Document, ".txt", "Documents")]
+    [InlineData("C:\\Users\\Leroy\\Desktop\\Gulasch", FileType.Other, "", "Other")]
+    public void Suggest_FileTypeCorrectlyMaps_DestinationDirectoryMatchesInputAndAnalyzedFileIsMaintained(string fullPath, FileType expectedType, string expectedExtension, string expectedFolder)
+    {
+        //Arrange
+        SortingSuggester s = new SortingSuggester("C:\\Desktop\\Sorted Files");
+        AnalyzedFile f = new AnalyzedFile(fullPath, expectedExtension, expectedType);
+        //Act
+        SuggestedMove m = s.Suggest(f);
+        //Assert
+        Assert.Equal(Path.Combine(s.DestinationRoot, expectedFolder), m.DestinationDirectory);
+        Assert.Same(f, m.File);
+    }
 }
