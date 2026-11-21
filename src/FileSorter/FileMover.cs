@@ -1,5 +1,5 @@
 ﻿
-    internal class FileMover
+    public class FileMover
     {
     public MoveResult MoveTo(SuggestedMove move) 
     {
@@ -19,7 +19,7 @@
         int counter = 1;
         while (true)
         {
-            string fullName = $"{nameWithoutExtension} ({counter}){extension}";
+            string fullName = $"{nameWithoutExtension}({counter}){extension}";
             string newPath = Path.Combine(directory, fullName);
             if (!File.Exists(newPath)) return newPath;
             counter++;

@@ -103,4 +103,129 @@ public class UnitTest1
         Assert.Equal(Path.Combine(s.DestinationRoot, expectedFolder), m.DestinationDirectory);
         Assert.Same(f, m.File);
     }
+    [Fact]
+    public void MoveTo_ValidMove_FileIsMovedAndResultIsSuccessful()
+    {
+        string testDirectory1 = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        string testDirectory2 = Path.Combine(testDirectory1, "sub1");
+        string f1 = Path.Combine(testDirectory1, "1.txt");
+        try
+        {
+            Directory.CreateDirectory(testDirectory1);
+            Directory.CreateDirectory(testDirectory2);
+            File.WriteAllText(f1, "");
+            //Arrange
+            Analyzer a = new Analyzer();
+            AnalyzedFile f = a.Analyze(f1);
+            SortingSuggester s = new SortingSuggester(testDirectory2);
+            SuggestedMove sm = s.Suggest(f);
+            FileMover m = new FileMover();
+            string fp = Path.Combine(testDirectory2, "Documents", "1.txt");
+            //Act
+            MoveResult r = m.MoveTo(sm);
+            //Assert
+            Assert.True(Directory.Exists(Path.Combine(testDirectory2, "Documents")));
+            Assert.True(File.Exists(fp));
+            Assert.False(File.Exists(f1));
+            Assert.Equal(fp, r.FinalPath);
+            Assert.Equal(f1, r.SourcePath);
+            Assert.True(r.Success);
+            Assert.False(r.WasRenamed);
+        }
+        finally
+        {
+            if (Directory.Exists(testDirectory1))
+                Directory.Delete(testDirectory1, true);
+        }
+
+    }
+    [Fact]
+    public void MoveTo_FileWithSameNameExistsAtDestination_FileIsMovedRenamedAndResultIsSuccessful()
+    {
+        string testDirectory1 = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        string testDirectory2 = Path.Combine(testDirectory1, "sub1");
+        string testDirectory3 = Path.Combine(testDirectory2, "Documents");
+        string f1 = Path.Combine(testDirectory1, "1.txt");
+        string f2 = Path.Combine(testDirectory3, "1.txt");
+        try
+        {
+            Directory.CreateDirectory(testDirectory1);
+            Directory.CreateDirectory(testDirectory3);
+            File.WriteAllText(f1, "Testing");
+            File.WriteAllText(f2, "Successful");
+            //Arrange
+            Analyzer a = new Analyzer();
+            AnalyzedFile f = a.Analyze(f1);
+            SortingSuggester s = new SortingSuggester(testDirectory2);
+            SuggestedMove sm = s.Suggest(f);
+            FileMover m = new FileMover();
+            string fp = Path.Combine(testDirectory3, "1(1).txt");
+            //Act
+            MoveResult r = m.MoveTo(sm);
+            //Assert
+            Assert.True(Directory.Exists(Path.Combine(testDirectory2, "Documents")));
+            Assert.True(File.Exists(fp));
+            Assert.False(File.Exists(f1));
+            Assert.Equal(fp, r.FinalPath);
+            Assert.Equal(f1, r.SourcePath);
+            Assert.True(r.Success);
+            Assert.True(r.WasRenamed);
+            Assert.Equal("Successful", File.ReadAllText(f2));
+            Assert.Equal("Testing", File.ReadAllText(fp));
+        }
+        finally
+        {
+            if (Directory.Exists(testDirectory1))
+                Directory.Delete(testDirectory1, true);
+        }
+
+    }
+    [Fact]
+    public void MoveTo_FileWithSameNameExistsAtDestinationMultipleTimes_FileIsMovedRenamedAppropriatelyAndResultIsSuccessful()
+    {
+        string testDirectory1 = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        string testDirectory2 = Path.Combine(testDirectory1, "sub1");
+        string testDirectory3 = Path.Combine(testDirectory2, "Documents");
+        string f1 = Path.Combine(testDirectory1, "1.txt");
+        string f2 = Path.Combine(testDirectory3, "1.txt");
+        string f3 = Path.Combine(testDirectory3, "1(1).txt");
+        string f4 = Path.Combine(testDirectory3, "1(2).txt");
+        try
+        {
+            Directory.CreateDirectory(testDirectory1);
+            Directory.CreateDirectory(testDirectory3);
+            File.WriteAllText(f1, "Testing");
+            File.WriteAllText(f2, "Successful");
+            File.WriteAllText(f3, "Successful");
+            File.WriteAllText(f4, "Successful");
+
+            //Arrange
+            Analyzer a = new Analyzer();
+            AnalyzedFile f = a.Analyze(f1);
+            SortingSuggester s = new SortingSuggester(testDirectory2);
+            SuggestedMove sm = s.Suggest(f);
+            FileMover m = new FileMover();
+            string fp = Path.Combine(testDirectory3, "1(3).txt");
+            //Act
+            MoveResult r = m.MoveTo(sm);
+            //Assert
+            Assert.True(Directory.Exists(Path.Combine(testDirectory2, "Documents")));
+            Assert.True(File.Exists(fp));
+            Assert.False(File.Exists(f1));
+            Assert.Equal(fp, r.FinalPath);
+            Assert.Equal(f1, r.SourcePath);
+            Assert.True(r.Success);
+            Assert.True(r.WasRenamed);
+            Assert.Equal("Successful", File.ReadAllText(f2));
+            Assert.Equal("Testing", File.ReadAllText(fp));
+            Assert.Equal("Successful", File.ReadAllText(f3));
+            Assert.Equal("Successful", File.ReadAllText(f4));
+        }
+        finally
+        {
+            if (Directory.Exists(testDirectory1))
+                Directory.Delete(testDirectory1, true);
+        }
+
+    }
 }
