@@ -227,5 +227,40 @@ public class UnitTest1
                 Directory.Delete(testDirectory1, true);
         }
 
+
+    }
+    [Fact]
+    public void MoveTo_InvalidMove_FileRemainsAndResultContainsCorrectState()
+    {
+        string testDirectory1 = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        string testDirectory2 = Path.Combine(testDirectory1, "sub1");
+        string f1 = Path.Combine(testDirectory1, "1.txt");
+        try
+        {
+            Directory.CreateDirectory(testDirectory1);
+            File.WriteAllText(testDirectory2, "");
+            File.WriteAllText(f1, "Testing");
+            //Arrange
+            Analyzer a = new Analyzer();
+            AnalyzedFile f = a.Analyze(f1);
+            SortingSuggester s = new SortingSuggester(testDirectory2);
+            SuggestedMove sm = s.Suggest(f);
+            FileMover m = new FileMover();
+            string fp = Path.Combine(testDirectory2, "Documents", "1.txt");
+            //Act
+            MoveResult r = m.MoveTo(sm);
+            //Assert
+            Assert.True(File.Exists(f1));
+            Assert.Equal(fp, r.FinalPath);
+            Assert.Equal(f1, r.SourcePath);
+            Assert.False(r.Success);
+            Assert.False(string.IsNullOrWhiteSpace(r.ErrorMessage));
+        }
+        finally
+        {
+            if (Directory.Exists(testDirectory1))
+                Directory.Delete(testDirectory1, true);
+        }
+
     }
 }

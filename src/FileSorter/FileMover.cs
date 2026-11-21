@@ -3,12 +3,21 @@
     {
     public MoveResult MoveTo(SuggestedMove move) 
     {
-        Directory.CreateDirectory(move.DestinationDirectory);
-        string fileName = Path.GetFileName(move.File.FullPath);
-        string finalPath = ResolveAvailablePath(Path.Combine(move.DestinationDirectory, fileName));
-        File.Move(move.File.FullPath, finalPath);
-        bool success = File.Exists(finalPath);
-        return new MoveResult(move.File.FullPath, finalPath, success);
+        string sourcePath = move.File.FullPath;
+        string fileName = Path.GetFileName(sourcePath);
+        string finalPath = Path.Combine(move.DestinationDirectory, fileName);
+        try
+        {
+            Directory.CreateDirectory(move.DestinationDirectory);
+            finalPath = ResolveAvailablePath(finalPath);
+            File.Move(sourcePath, finalPath);
+            bool success = File.Exists(finalPath);
+            return new MoveResult(sourcePath, finalPath, success);
+        }
+        catch (Exception ex)
+        {
+            return new MoveResult(sourcePath, finalPath, false, ex.Message);
+        }
     }
     private string ResolveAvailablePath(string fullPath)
     {
